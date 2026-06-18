@@ -108,8 +108,8 @@ Role Permissions:
 
 ### Database
 
-* MongoDB Atlas
-* Mongoose
+* postgresql
+  
 
 ---
 

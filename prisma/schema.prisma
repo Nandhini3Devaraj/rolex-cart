@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Customer
+  Staff
+  Manager
+  SuperAdmin
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  Completed
+  Cancelled
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(Customer)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders  Order[]
+  reviews ProductReview[]
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      String
+  price         Float
+  stock         Int      @default(0)
+  image         String   @default("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600")
+  averageRating Float    @default(0)
+  totalReviews  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews    ProductReview[]
+  orderItems OrderItem[]
+}
+
+model ProductReview {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  userName  String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  customerId      String
+  totalAmount     Float
+  status          OrderStatus @default(Pending)
+  shippingAddress Json?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  customer User        @relation(fields: [customerId], references: [id])
+  items    OrderItem[]
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
